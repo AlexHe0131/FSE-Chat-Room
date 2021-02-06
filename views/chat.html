@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>FSE Chat Room</title>
+    <link rel="stylesheet" type="text/css" href='/css/bootstrap.min.css'>
+    <link rel="stylesheet" type="text/css" href='/css/signin.css'>
+    <link rel="stylesheet" type="text/css" href='/css/style.css'>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script>
+        jQuery(function($) {
+            var socket = io.connect();
+            var $homePanel = $('#home');
+            var $roomPanel = $('#room');
+            var $enterForm = $('#signin');
+            var $msgForm = $('#post');
+            var $chatLog = $('#log');
+            var $newMessage = $('#message');
+            var $username = $('#username');
+            var $password = $('#password');
+            var $error = $('#error');
+
+
+            $enterForm.submit(function(e) {
+                e.preventDefault();
+                socket.emit('login', $username.val(), function(data) {
+                    if (data) {
+                        $homePanel.hide();
+                        $roomPanel.show();
+                    } else {
+                        $error.html('Username has been used, Please try another one!');
+                    }
+                });
+                $username.val('');
+            });
+
+            socket.on('enter', function(username) {
+                var html = username + " enters the chat room.";
+                $chatLog.append('<span id="highlight">' + html + "</span><br/>");
+            });
+
+            socket.on('leave', function(username) {
+                var html = username + " leaves the chat room.";
+                $chatLog.append('<span id="highlight">' + html + "</span><br/>");
+            });
+
+            $msgForm.submit(function(e) {
+                e.preventDefault();
+                socket.emit('post', $newMessage.val(), function(msg) {
+                    $chatLog.append('<span>' + msg + "</span><br/>");
+                });
+                $newMessage.val('');
+            });
+
+            socket.on('chat history', function(data) {
+                for (var i = 0; i < data.length; i++) {
+                    display(data[i]);
+                }
+            });
+
+            socket.on('new message', function(data) {
+                display(data);
+            });
+
+            function display(data) {
+                $chatLog.append('<span>' + data.timestamp + ', ' + '<b>' + data.user + '</b>' + ' said: ' + data.message + "</span><br/>");
+            }
+
+            
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <div  id="home">
+            <form class="form-signin" id="signin">
+                <div class="popup">
+                    <div class="popup-content">
+                        <input type="text" class="form-control" id="username" placeholder="Enter a username that you want everybody call you!" required autofocus>
+                        <br>
+                        <br>
+
+                        <button class="btn btn-lg btn-primary btn-block" type="submit">Let's Chat!!!</button>
+                    </div>
+                </div>    
+            </form>   
+        </div>     
+        <div id="room">
+            <header>
+                <h1>Welcome to FSE Chat Room</h1>
+            </header>
+            <div id="log"></div>
+            <div align="center">
+                <textarea id="message" placeholder="Enter your message here" form="post"></textarea>
+            </div>
+            <div>
+                <form action="/login">
+                    <div align="left">
+                        <button class="btn btn-primary" type="submit">Log out</button>
+                    </div>
+                </form>
+                <form id="post">
+                    <div align="right">
+                        <button class="btn btn-primary" type="submit">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector("button").addEventListener("click", function(){
+            document.querySelector(".popup").style.display = "none";
+        })
+    </script>
+</body>
+</html>
