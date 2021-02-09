@@ -11,8 +11,8 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var ejs = require('ejs');
 const { use } = require("passport");
+const { connect } = require("http2");
 var users = {};
-
 
 app.use(bodyParser.urlencoded({ extended: false })); 
 
@@ -20,7 +20,8 @@ app.engine('.html', ejs.__express);
 app.set('view engine', 'html');
 
 app.use(require("express-session")({ 
-    secret: "Rusty is a dog", 
+    secret: "Xinchen Chat Room", 
+    name: connect.sid,
     resave: false, 
     saveUninitialized: false
 })); 
@@ -32,18 +33,14 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser()); 
 passport.deserializeUser(User.deserializeUser()); 
 
-// Showing login page 
 app.get("/", function (req, res) { 
     res.render("login.html"); 
 }); 
   
-
-// Showing register page 
 app.get("/register", function (req, res) { 
     res.render("register.html"); 
 }); 
   
-// Handling user signup 
 app.post("/register", function (req, res) { 
     var username = req.body.username 
     var password = req.body.password 
@@ -61,33 +58,31 @@ app.post("/register", function (req, res) {
     }); 
 }); 
   
-//Showing login form 
 app.get("/login", function (req, res) { 
     res.render("login.html"); 
 }); 
   
-//Handling user login 
 app.post("/login", passport.authenticate("local", { 
     successRedirect: "/chat", 
     failureRedirect: "/login"
-}), function (req, res) { 
+}), function (req, res) {
 }); 
 
-// Showing chat page 
 app.get("/chat", isLoggedIn, function (req, res) { 
     res.sendFile(__dirname + '/views/chat.html');
 })
   
-//Handling user logout  
 app.get("/logout", function (req, res) { 
     req.logout(); 
     res.redirect("/"); 
 }); 
+
 app.use(express.static(__dirname + '/public'));  
 function isLoggedIn(req, res, next) { 
     if (req.isAuthenticated()) return next(); 
     res.redirect("/login"); 
 } 
+
 mongoose.set('useNewUrlParser', true); 
 mongoose.set('useFindAndModify', false); 
 mongoose.set('useCreateIndex', true); 
@@ -96,24 +91,24 @@ mongoose.connect("mongodb://localhost/27017");
 
 
 io.on('connection', function(socket){
-    socket.on('login', function(username, callback) { // login to chatroom
+    socket.on('login', function(username, callback) {
         if (username in users) {
             callback(false);
         } else {
             socket.username = username;
-            socket.broadcast.emit('enter', socket.username); //broadcast username when enterring
-            users[socket.username] = socket; // set user online
+            socket.broadcast.emit('enter', socket.username);
+            users[socket.username] = socket;
             callback(true);
         }
     });
 
     socket.on('disconnect', function() {
-        socket.broadcast.emit('leave', socket.username); //broadcast username when leaving
-        delete users[socket.username]; // set user offline
+        socket.broadcast.emit('leave', socket.username);
+        delete users[socket.username];
     });
 
     socket.on('post', function(msg) {
-        var newMsg = new message({ // create new message
+        var newMsg = new message({
             timestamp: new Date().toLocaleString(),
             user: socket.username,
             message: msg.trim()
@@ -132,13 +127,13 @@ io.on('connection', function(socket){
         });
     });
 
-    message.find({}, function(err, history) { // load history messages
+    message.find({}, function(err, history) {
         if (err) {
             console.log('error occurs: ' + err);
             return;
         } else {
-            console.log('loading chat histories');
-            socket.emit('chat history', history); // retrieve char histories
+            console.log('loading chat...');
+            socket.emit('chat history', history);
         }
     });
 });

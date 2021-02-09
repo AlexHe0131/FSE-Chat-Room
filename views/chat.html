@@ -14,8 +14,8 @@
     <script>
         jQuery(function($) {
             var socket = io.connect();
-            var $homePanel = $('#home');
-            var $roomPanel = $('#room');
+            var $popUpPage = $('#popUp');
+            var $mainChat = $('#mainChat');
             var $enterForm = $('#signin');
             var $msgForm = $('#post');
             var $chatLog = $('#log');
@@ -29,8 +29,8 @@
                 e.preventDefault();
                 socket.emit('login', $username.val(), function(data) {
                     if (data) {
-                        $homePanel.hide();
-                        $roomPanel.show();
+                        $popUpPage.hide();
+                        $mainChat.show();
                     } else {
                         $error.html('Username has been used, Please try another one!');
                     }
@@ -77,7 +77,7 @@
 
 <body>
     <div class="container">
-        <div  id="home">
+        <div id="popUp">
             <form class="form-signin" id="signin">
                 <div class="popup">
                     <div class="popup-content">
@@ -90,20 +90,20 @@
                 </div>    
             </form>   
         </div>     
-        <div id="room">
+        <div id="mainChat">
             <header>
                 <h1>Welcome to FSE Chat Room</h1>
+                <form action="/login">
+                    <div align="right">
+                        <button class="btn btn-primary" type="submit">Log out</button>
+                    </div>
+                </form>
             </header>
             <div id="log"></div>
             <div align="center">
                 <textarea id="message" placeholder="Enter your message here" form="post"></textarea>
             </div>
             <div>
-                <form action="/login">
-                    <div align="left">
-                        <button class="btn btn-primary" type="submit">Log out</button>
-                    </div>
-                </form>
                 <form id="post">
                     <div align="right">
                         <button class="btn btn-primary" type="submit">Post</button>

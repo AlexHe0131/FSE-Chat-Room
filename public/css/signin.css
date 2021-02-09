@@ -12,6 +12,8 @@ header{
   align-items: center;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-weight: 100;
+  overflow: hidden;
+  padding: auto;
 }
 
 .form-signin {
